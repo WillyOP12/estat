@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-   <link rel="icon" type="image/svg" sizes="32x32" href="./favicon.svg">
+    <link rel="icon" type="image/svg" sizes="32x32" href="./favicon.svg">
     <title>El Meu Estatus Personal</title>
     <style>
+        /* El mateix CSS que abans */
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             text-align: center;
@@ -30,14 +31,12 @@
         .estatus {
             margin-bottom: 20px;
         }
-        /* Títol estatus: gran, negreta, més fosc */
         #estatusText {
             font-size: 2em;
             font-weight: bold;
             color: #222;
             margin: 10px 0 4px 0;
         }
-        /* Descripció estatus: més petita */
         #descripcioText {
             font-size: 0.9em;
             color: #666;
@@ -46,7 +45,6 @@
         .estatus p {
             margin: 0;
         }
-        /* Modal */
         .modal {
             display: none;
             position: fixed;
@@ -116,7 +114,6 @@
         </div>
     </div>
 
-    <!-- Modal per canviar estatus -->
     <div id="modal" class="modal">
         <div class="modal-content">
             <h2>Canvia el Teu Estatus</h2>
@@ -128,18 +125,22 @@
     </div>
 
     <script>
-        // Contrasenya sense xifrar (directa)
+        const apiUrl = '/api/estatus';  // URL de la funció API a Vercel
         const contrasenyaCorrecta = 'guillem@12';
 
-        // Carrega l'estatus des de localStorage
-        function carregarEstatus() {
-            const estatus = localStorage.getItem('estatus');
-            const descripcio = localStorage.getItem('descripcio');
-            document.getElementById('estatusText').textContent = estatus || '';
-            document.getElementById('descripcioText').textContent = descripcio || '';
+        // Carrega l'estatus des de l'API
+        async function carregarEstatus() {
+            try {
+                const response = await fetch(apiUrl);
+                const data = await response.json();
+                document.getElementById('estatusText').textContent = data.estatus;
+                document.getElementById('descripcioText').textContent = data.descripcio;
+            } catch (error) {
+                console.error('Error carregant estatus:', error);
+            }
         }
 
-        // Funció per canviar estatus (crida-la des de la consola)
+        // Funció per canviar estatus
         function canviarEstatus() {
             const contrasenyaIntroduida = prompt('Introdueix la contrasenya:');
             if (contrasenyaIntroduida === contrasenyaCorrecta) {
@@ -149,8 +150,8 @@
             }
         }
 
-        // Funció per guardar l'estatus des del modal
-        function guardarEstatus() {
+        // Funció per guardar l'estatus via API
+        async function guardarEstatus() {
             const nouEstatus = document.getElementById('nouEstatus').value.trim();
             const novaDescripcio = document.getElementById('novaDescripcio').value.trim();
 
@@ -159,14 +160,29 @@
                 return;
             }
 
-            // Guarda a localStorage
-            localStorage.setItem('estatus', nouEstatus);
-            localStorage.setItem('descripcio', novaDescripcio);
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        nouEstatus,
+                        novaDescripcio,
+                        contrasenya: contrasenyaCorrecta  // Envia la contrasenya per verificar
+                    })
+                });
 
-            // Actualitza la pàgina i tanca el modal
-            carregarEstatus();
-            tancarModal();
-            alert('Estatus actualitzat!');
+                if (response.ok) {
+                    carregarEstatus();  // Recarrega l'estatus
+                    tancarModal();
+                    alert('Estatus actualitzat!');
+                } else {
+                    const error = await response.json();
+                    alert(error.error);
+                }
+            } catch (error) {
+                console.error('Error guardant estatus:', error);
+                alert('Error en guardar l\'estatus.');
+            }
         }
 
         // Funció per tancar el modal
