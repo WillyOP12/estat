@@ -1,13 +1,6 @@
-    import { Redis } from '@upstash/redis';
+import { createClient } from 'redis';
 
-    const redis = new Redis({
-      url: process.env.UPSTASH_REDIS_REST_URL,  // Nova variable
-      token: process.env.UPSTASH_REDIS_REST_TOKEN,  // Nova variable
-    });
+const redis = await createClient({ url: process.env.estatguillemortiz_REDIS_URL="redis://default:AzDFGKSGGrQBXYdPx5JkUIV5DzBpV9Xu@redis-19097.c278.us-east-1-4.ec2.cloud.redislabs.com:19097" }).connect();
 
-    export default async function handler(req, res) {
-      await redis.set('key', 'value');
-      const data = await redis.get('key');
-      res.status(200).json({ data });
-    }
-    
+await redis.set('key', 'value');
+const value = await redis.get('key');
